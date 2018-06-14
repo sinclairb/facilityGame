@@ -34,7 +34,7 @@ class mainMenu(menuFrame):
             self.reportButton.pack()
 
         # New game button
-        self.newGameButton = tkinter.Button(self, text="New Game", command=lambda : [saveload.newGame(),self.switchTo(mainMenu)])
+        self.newGameButton = tkinter.Button(self, text="New Game", command=lambda : [saveload.newGame(),self.switchTo(reportMenu)])
         self.newGameButton.pack()
         
         # Load game button
