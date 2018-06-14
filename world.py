@@ -31,7 +31,7 @@ class Region(object):
         # The amount of employees generated should be based on the tier
         numberOfEmployeesToGenerate=random.randint(1,currentstate.gamestate.tier+1)
         for x in range(numberOfEmployeesToGenerate):
-            pass
+            x
 
     def generateSubjects(self):
         pass

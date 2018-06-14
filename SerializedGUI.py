@@ -1,7 +1,9 @@
 import tkinter
+import currentstate
+import saveload
 
-class levelFrame(tkinter.Frame):
-    def __init__(self, master):
+class LevelFrame(tkinter.Frame):
+    def __init__(self, master, nameOfMenuFrame=None):
         tkinter.Frame.__init__(self, master)
         """
         A collection of frames/widgets that are added to the frame passed as the "master" parameter
@@ -10,33 +12,41 @@ class levelFrame(tkinter.Frame):
         self.grid(row=0,column=0)
 
         # A frame that holds menu buttons
-        self.menuFrame=menuFrame(self)
+        self.menuFrame=MenuFrame(self)
         self.menuFrame.grid(row=0,column=0)
 
         # A frame that holds whatever info should be displayed based on which button in the menuFame was pressed
         # Initialized to an empty frame, but populated via the populateDisplayFrame method
-        self.displayFrame=displayFrame(self)
+        self.displayFrame=DisplayFrame(self)
         self.displayFrame.grid(row=1,column=0)
 
+        if nameOfMenuFrame:
+            self.populateMenuFrame(nameOfMenuFrame)
+
+    def populateMenuFrame(self, nameOfNewMenuFrame):
+        self.menuFrame.destroy()
+        self.menuFrame=nameOfNewMenuFrame(self)
+        self.menuFrame.grid(row=0,column=0)
+
     def populateDisplayFrame(self, nameOfNewDisplayFrame):
-        print("populate",nameOfNewDisplayFrame)
         self.displayFrame.destroy()
         self.displayFrame=nameOfNewDisplayFrame(self)
         self.displayFrame.grid(row=1,column=0)
 
-class menuFrame(tkinter.Frame):
+    def populateDisplayFrameWithLevelFrame(self, nameOfNewMenuFrame):
+        self.displayFrame.destroy()
+        self.displayFrame=LevelFrame(self,nameOfNewMenuFrame)
+        self.displayFrame.grid(row=1,column=0)
+
+class MenuFrame(tkinter.Frame):
     def __init__(self, master):
         tkinter.Frame.__init__(self, master)
         """
         A frame that holds a collection of buttons that, when pressed, change the displayFrame in the levelFrame
-        Buttons should be named button1, button2, etc. so that they can easily be referenced from other places in the code
         """
         self.grid(row=0,column=0)
 
-        self.button1=tkinter.Button(self, text="Test Menu", command=lambda : master.populateDisplayFrame(displayFrame))
-        self.button1.grid(row=0,column=0,sticky=tkinter.W)
-
-class displayFrame(tkinter.Frame):
+class DisplayFrame(tkinter.Frame):
     def __init__(self, master):
         tkinter.Frame.__init__(self, master)
         """
@@ -44,50 +54,142 @@ class displayFrame(tkinter.Frame):
         """
         self.grid(row=0,column=0)
 
-        self.la = tkinter.Label(self,text="Test Display"+str(master))
-        self.la.grid()
-
-class topMenuFrame(menuFrame):
+class TopMenuFrame(MenuFrame):
     def __init__(self, master):
-        menuFrame.__init__(self, master)
+        MenuFrame.__init__(self, master)
         """
         A collection of buttons that are used to navigate top-level menus
         """
 
         # Top-level menu buttons
-        self.button1=tkinter.Button(self, text="Main Menu", command=lambda : master.populateDisplayFrame(mainMenuDisplay))
-        self.button1.grid(row=0,column=0,sticky=tkinter.W)
+        self.mainMenuButton=tkinter.Button(self, text="Main Menu", command=lambda : master.populateDisplayFrame(MainMenuDisplay))
+        self.mainMenuButton.grid(row=0,column=0,sticky=tkinter.W)
 
-        self.button2=tkinter.Button(self, text="Report")
-        self.button2.grid(row=0,column=1,sticky=tkinter.W)
+        self.reportButton=tkinter.Button(self, text="Report", command=lambda : master.populateDisplayFrame(ReportDisplay))
+        self.reportButton.grid(row=0,column=1,sticky=tkinter.W)
 
-        self.button3=tkinter.Button(self, text="Map")
-        self.button3.grid(row=0,column=2,sticky=tkinter.W)
+        self.mapButton=tkinter.Button(self, text="Map", command=lambda : master.populateDisplayFrame(MapDisplay))
+        self.mapButton.grid(row=0,column=2,sticky=tkinter.W)
 
-        self.button4=tkinter.Button(self, text="Approval")
-        self.button4.grid(row=0,column=3,sticky=tkinter.W)
+        self.approvalButton=tkinter.Button(self, text="Approval", command=lambda : master.populateDisplayFrame(ApprovalDisplay))
+        self.approvalButton.grid(row=0,column=3,sticky=tkinter.W)
 
-class mainMenuDisplay(displayFrame):
+        self.destroyButton=tkinter.Button(self, text="Destroy Display Frame", command=lambda : master.displayFrame.destroy())
+        self.destroyButton.grid(row=0,column=3,sticky=tkinter.W)
+
+        self.mainMenuButton.invoke()
+
+class MainMenuDisplay(DisplayFrame):
     def __init__(self, master):
         tkinter.Frame.__init__(self, master)
         """
         A collection of buttons that comprise the main menu
         """
 
+        # New game button
+        self.newGameButton = tkinter.Button(self, text="New Game", command=lambda : saveload.newGame())
+        self.newGameButton.grid(row=0,column=0)
+        
+        # Load game button
+        self.loadGameButton = tkinter.Button(self, text="Load Game", command=lambda : master.populateDisplayFrame(MainMenuDisplay))
+        self.loadGameButton.grid(row=1,column=0)
+
+        # Options button
+        self.optionsButton = tkinter.Button(self, text="Options", command=lambda : master.populateDisplayFrameWithLevelFrame(OptionsMenuFrame))
+        self.optionsButton.grid(row=2,column=0)
+
         # Quit button
         self.quitButton = tkinter.Button(self, text="Quit", command=window.destroy)
-        self.quitButton.pack()
+        self.quitButton.grid(row=3,column=0)
+
+class OptionsMenuFrame(MenuFrame):
+    def __init__(self, master):
+        MenuFrame.__init__(self, master)
+        """
+        A collection of buttons that are used to navigate game, visual, and audio options menus
+        """
+
+        # Top-level menu buttons
+        self.gameOptionsButton=tkinter.Button(self, text="Gameplay", command=lambda : master.populateDisplayFrame(GameOptionsDisplay))
+        self.gameOptionsButton.grid(row=0,column=0,sticky=tkinter.W)
+
+        self.visualOptionsButton=tkinter.Button(self, text="Visuals", command=lambda : master.populateDisplayFrame(VisualOptionsDisplay))
+        self.visualOptionsButton.grid(row=0,column=1,sticky=tkinter.W)
+
+        self.audioOptionsButton=tkinter.Button(self, text="Audio", command=lambda : master.populateDisplayFrame(AudioOptionsDisplay))
+        self.audioOptionsButton.grid(row=0,column=2,sticky=tkinter.W)
+
+        self.gameOptionsButton.invoke()
+
+class GameOptionsDisplay(DisplayFrame):
+    def __init__(self, master):
+        tkinter.Frame.__init__(self, master)
+        """
+        A collection of widgets that set and display game options
+        """
+
+        self.label = tkinter.Label(self,text="Test Game Options Display"+str(master))
+        self.label.grid()
+
+class VisualOptionsDisplay(DisplayFrame):
+    def __init__(self, master):
+        tkinter.Frame.__init__(self, master)
+        """
+        A collection of widgets that set and display visual options
+        """
+
+        self.label = tkinter.Label(self,text="Test Visual Options Display"+str(master))
+        self.label.grid()
+
+class AudioOptionsDisplay(DisplayFrame):
+    def __init__(self, master):
+        tkinter.Frame.__init__(self, master)
+        """
+        A collection of widgets that set and display audio options
+        """
+
+        self.label = tkinter.Label(self,text="Test Audio Options Display"+str(master))
+        self.label.grid()
+
+class ReportDisplay(DisplayFrame):
+    def __init__(self, master):
+        tkinter.Frame.__init__(self, master)
+        """
+        Shows the results of missions
+        """
+
+        self.label = tkinter.Label(self,text="Test Report Display"+str(master))
+        self.label.grid()
+
+class MapDisplay(DisplayFrame):
+    def __init__(self, master):
+        tkinter.Frame.__init__(self, master)
+        """
+        Shows the world map so that users can navigate missions by region
+        """
+
+        self.label = tkinter.Label(self,text="Test Map Display"+str(master))
+        self.label.grid()
+
+class ApprovalDisplay(DisplayFrame):
+    def __init__(self, master):
+        tkinter.Frame.__init__(self, master)
+        """
+        Shows the queued and pending missions the user has selected
+        """
+
+        self.label = tkinter.Label(self,text="Test Approval Display"+str(master))
+        self.label.grid()
 
 # The window serves as a driver because it is an event listener
 # Create the window that the game will run in
 window=tkinter.Tk()
 # What the program will display as
 window.title("Test Window")
-# Makes the window fullscreen
+# Makes the window not fullscreen
 window.attributes('-fullscreen',False)
 
 # The top-level levelFrame is created, added to the window, and is given the top-level menu buttons
-topLevel=levelFrame(window)
-topMenu=menuFrame(topLevel)
+topLevel=LevelFrame(window,TopMenuFrame)
 
 window.mainloop()
