@@ -11,21 +11,9 @@ class Gamestate(object):
         # The higher the tier, the higher level employees, subjects, and events occur
         self.tier=0
 
-        # Defines the global geoscheme
-        self.northAmerica=world.Region("North America",-20)
-        self.southAmerica=world.Region("South America",0)
-        self.europe=world.Region("Europe",-20)
-        self.asia=world.Region("Asia",+10)
-        self.africa=world.Region("Africa",+20)
-        self.australia=world.Region("Australia",+20)
-        # Packs the regions into a dictionary for easy traversal
-        self.regions={
-            self.northAmerica.name:self.northAmerica,
-            self.southAmerica.name:self.southAmerica,
-            self.europe.name:self.europe,
-            self.asia.name:self.asia,
-            self.africa.name:self.africa,
-            self.australia.name:self.australia}
+        # Creates a world, which is a dictionary of regions
+        self.world=world.World()
+
         # Create the facility and set its location
         self.facility=facility.Facility()
 

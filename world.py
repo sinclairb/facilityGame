@@ -1,6 +1,27 @@
 import random
 import currentstate
 
+class World(object):
+    def __init__(self):
+        """
+        A World is a dictionary of regions, initialized to specific values
+        """
+        # Defines the global geoscheme
+        self.northAmerica=Region("North America",-20)
+        self.southAmerica=Region("South America",0)
+        self.europe=Region("Europe",-20)
+        self.asia=Region("Asia",+10)
+        self.africa=Region("Africa",+20)
+        self.australia=Region("Australia",+20)
+        # Packs the regions into a dictionary for easy traversal
+        self.regions={
+            self.northAmerica.name:self.northAmerica,
+            self.southAmerica.name:self.southAmerica,
+            self.europe.name:self.europe,
+            self.asia.name:self.asia,
+            self.africa.name:self.africa,
+            self.australia.name:self.australia}
+
 class Region(object):
     def __init__(self, name, difficulty):
         """
