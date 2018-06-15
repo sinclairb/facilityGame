@@ -1,6 +1,5 @@
 import character
 import world
-import facility
 
 # This class can be passed or referenced in order to load values that define the state of the game
 # These values are what are saved and loaded
@@ -11,11 +10,8 @@ class Gamestate(object):
         # The higher the tier, the higher level employees, subjects, and events occur
         self.tier=0
 
-        # Creates a world, which is a dictionary of regions
+        # Creates a world, which is a list of regions, including the facility
         self.world=world.World()
-
-        # Create the facility and set its location
-        self.facility=facility.Facility()
 
         # The amount of money available to the player
         self.funds=1000000

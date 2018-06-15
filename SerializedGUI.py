@@ -3,13 +3,16 @@ import currentstate
 import saveload
 
 class LevelFrame(tkinter.Frame):
-    def __init__(self, master, nameOfMenuFrame=None):
+    def __init__(self, master, nameOfMenuFrame=None, region=None):
         tkinter.Frame.__init__(self, master)
         """
         A collection of frames/widgets that are added to the frame passed as the "master" parameter
         A levelFrame consists of a frame that holds menu buttons, and a frame that displays info
         """
         self.grid(row=0,column=0)
+
+        # Creates an attribute that contains the region (if any) that was passed to the levelFrame
+        self.region=region
 
         # A frame that holds menu buttons
         self.menuFrame=MenuFrame(self)
@@ -20,12 +23,17 @@ class LevelFrame(tkinter.Frame):
         self.displayFrame=DisplayFrame(self)
         self.displayFrame.grid(row=1,column=0)
 
+        # Creates a menu frame of the specified type, if one is specified
         if nameOfMenuFrame:
-            self.populateMenuFrame(nameOfMenuFrame)
+            self.populateMenuFrame(nameOfMenuFrame, region)
 
-    def populateMenuFrame(self, nameOfNewMenuFrame):
+    def populateMenuFrame(self, nameOfNewMenuFrame, region=None):
         self.menuFrame.destroy()
-        self.menuFrame=nameOfNewMenuFrame(self)
+        # Checks if a region is passed to the levelFrame. If one is, that means that a MissionsMenuFrame should be created for that region
+        if region:
+            self.menuFrame=MissionsMenuFrame(self, region)
+        else:
+            self.menuFrame=nameOfNewMenuFrame(self)
         self.menuFrame.grid(row=0,column=0,sticky=tkinter.W)
 
     def populateDisplayFrame(self, nameOfNewDisplayFrame):
@@ -33,13 +41,18 @@ class LevelFrame(tkinter.Frame):
         self.displayFrame=nameOfNewDisplayFrame(self)
         self.displayFrame.grid(row=1,column=0)
 
-    def populateDisplayFrameWithLevelFrame(self, nameOfNewMenuFrame):
+    def populateDisplayFrameWithLevelFrame(self, nameOfNewMenuFrame, region=None):
         self.displayFrame.destroy()
-        self.displayFrame=LevelFrame(self,nameOfNewMenuFrame)
+        self.displayFrame=LevelFrame(self,nameOfNewMenuFrame,region)
         self.displayFrame.grid(row=1,column=0,sticky=tkinter.W)
 
+    def populateMissionsMenuFrame(self, region):
+        self.menuFrame.destroy()
+        self.menuFrame=MissionsMenuFrame(self, region)
+        self.menuFrame.grid(row=0,column=0,sticky=tkinter.W)
+
 class MenuFrame(tkinter.Frame):
-    def __init__(self, master):
+    def __init__(self, master, region=None):
         tkinter.Frame.__init__(self, master)
         """
         A frame that holds a collection of buttons that, when pressed, change the displayFrame in the levelFrame
@@ -65,17 +78,18 @@ class TopMenuFrame(MenuFrame):
         self.mainMenuButton=tkinter.Button(self, text="Main Menu", command=lambda : master.populateDisplayFrame(MainMenuDisplay))
         self.mainMenuButton.grid(row=0,column=0,sticky=tkinter.W)
 
-        self.reportButton=tkinter.Button(self, text="Report", command=lambda : master.populateDisplayFrame(ReportDisplay))
-        self.reportButton.grid(row=0,column=1,sticky=tkinter.W)
+        if currentstate.gamestate:
+            self.reportButton=tkinter.Button(self, text="Report", command=lambda : master.populateDisplayFrame(ReportDisplay))
+            self.reportButton.grid(row=0,column=1,sticky=tkinter.W)
 
-        self.mapButton=tkinter.Button(self, text="Map", command=lambda : master.populateDisplayFrameWithLevelFrame(MapMenuFrame))
-        self.mapButton.grid(row=0,column=2,sticky=tkinter.W)
+            self.mapButton=tkinter.Button(self, text="Map", command=lambda : master.populateDisplayFrameWithLevelFrame(MapMenuFrame))
+            self.mapButton.grid(row=0,column=2,sticky=tkinter.W)
 
-        self.approvalButton=tkinter.Button(self, text="Approval", command=lambda : master.populateDisplayFrame(ApprovalDisplay))
-        self.approvalButton.grid(row=0,column=3,sticky=tkinter.W)
+            self.approvalButton=tkinter.Button(self, text="Approval", command=lambda : master.populateDisplayFrame(ApprovalDisplay))
+            self.approvalButton.grid(row=0,column=3,sticky=tkinter.W)
 
-        self.destroyButton=tkinter.Button(self, text="Destroy Display Frame", command=lambda : master.displayFrame.destroy())
-        self.destroyButton.grid(row=0,column=3,sticky=tkinter.W)
+            self.destroyButton=tkinter.Button(self, text="Destroy Display Frame", command=lambda : master.displayFrame.destroy())
+            self.destroyButton.grid(row=0,column=4,sticky=tkinter.W)
 
         self.mainMenuButton.invoke()
 
@@ -87,7 +101,7 @@ class MainMenuDisplay(DisplayFrame):
         """
 
         # New game button
-        self.newGameButton = tkinter.Button(self, text="New Game", command=lambda : saveload.newGame())
+        self.newGameButton = tkinter.Button(self, text="New Game", command=lambda : [saveload.newGame(),master.populateMenuFrame(TopMenuFrame)])
         self.newGameButton.grid(row=0,column=0)
         
         # Load game button
@@ -178,10 +192,42 @@ class MapMenuFrame(MenuFrame):
         Shows the world map so that users can navigate missions by region
         """
 
-        # A button should exist for each region
-        for eachRegion in currentstate.gamestate.world.regions.values():
-            self.label = tkinter.Label(self,text=eachRegion.name)
-            self.label.grid()
+        self.baseButton=tkinter.Button(self, text="Base", command=lambda : master.populateDisplayFrameWithLevelFrame(MissionsMenuFrame, currentstate.gamestate.world.facility))
+        self.baseButton.grid(row=0, column=0)
+
+        # A menu button should exist for each region, which displays the region's missions menu
+        self.regionButtons=[]
+        for index, aRegion in enumerate(currentstate.gamestate.world.regions):
+            self.regionButtons.append(tkinter.Button(self, text=aRegion.name, command=lambda aRegion=aRegion: master.populateDisplayFrameWithLevelFrame(MissionsMenuFrame, aRegion)))
+            self.regionButtons[index].grid(row=0,column=index+1)
+
+
+        self.baseButton.invoke()
+
+class MissionsMenuFrame(MenuFrame):
+    def __init__(self, master, region):
+        MenuFrame.__init__(self, master)
+        """
+        A collection of buttons that allow the user to navigate between the base overview and mission types
+        """
+        self.overviewButton=tkinter.Button(self, text="Overview", command=lambda : master.populateDisplayFrame(RegionOverviewDisplay))
+        self.overviewButton.grid(row=0, column=0)
+
+        
+
+
+        self.overviewButton.invoke()
+
+class RegionOverviewDisplay(DisplayFrame):
+    def __init__(self, master):
+        DisplayFrame.__init__(self, master)
+        """
+        Shows the overview of the base
+        """
+        self.region=master.region
+
+        self.label = tkinter.Label(self,text=str(self.region)+self.region.name+" Test "+self._name+str(master))
+        self.label.grid()
 
 class ApprovalDisplay(DisplayFrame):
     def __init__(self, master):
